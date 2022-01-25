@@ -1,0 +1,22 @@
+{
+  "name": "clujs",
+  "version": "1.0.0",
+  "description": "A complete frontend and backend JavaScript web framework using Web Components and Node.js",
+  "main": "clu.js",
+  "bin": {
+    "clu": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucharlesc/clujs.git"
+  },
+  "author": "Charles Lu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucharlesc/clujs/issues"
+  },
+  "homepage": "https://github.com/lucharlesc/clujs#readme"
+}
