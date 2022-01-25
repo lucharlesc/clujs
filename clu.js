@@ -52,7 +52,7 @@ document.body.prepend(new AppView());`
     }
     
     var viewText = 
-`export class ${viewClass} extends HTMLElement {
+`export default class ${viewClass} extends HTMLElement {
     _state = {};
     static _isStyled = false;
     constructor(props) {
@@ -60,6 +60,7 @@ document.body.prepend(new AppView());`
         this._setState(props);
         this._setStyle();
         this._setHTML();
+        this._setHandlers();
     }
     _setState(props) {
         for (var prop in props) {
@@ -79,12 +80,13 @@ document.body.prepend(new AppView());`
         this.innerHTML = 
 \`\`;
     }
+    _setHandlers() {}
 }`
 
     fs.writeFileSync(`./views/${viewName}.js`, viewText)
     
     var importDefineText = 
-`import { ${viewClass} } from "./views/${viewName}.js"
+`import ${viewClass} from "./views/${viewName}.js"
 window.customElements.define("${viewName}", ${viewClass});
 
 `
