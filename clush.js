@@ -1,7 +1,7 @@
-const fs = require("fs")
-const cp = require("child_process")
+const fs = require("fs");
+const cp = require("child_process");
 
-var args = process.argv.slice(2)
+var args = process.argv.slice(2);
 
 if (args[0] == "init") {
 
@@ -13,7 +13,7 @@ if (args[0] == "init") {
     <body>
         <script type="module" src="app.js"></script>
     </body>
-</html>`
+</html>`;
 
     var appJsText = 
 `window._state = {};
@@ -23,32 +23,32 @@ style.innerHTML =
 \`\`;
 document.head.append(style);
 
-document.body.prepend(new AppView());`
+document.body.prepend(new AppView());`;
 
     try {
-        fs.accessSync("./app.html")
+        fs.accessSync("./app.html");
     } catch (err) {
-        fs.writeFileSync("./app.html", appHtmlText)
+        fs.writeFileSync("./app.html", appHtmlText);
     }
     try {
-        fs.accessSync("./app.js")
+        fs.accessSync("./app.js");
     } catch (err) {
-        fs.writeFileSync("./app.js", appJsText)
+        fs.writeFileSync("./app.js", appJsText);
     }
     try {
-        fs.accessSync("./views")
+        fs.accessSync("./views");
     } catch (err) {
-        fs.mkdirSync("./views")
-        cp.spawn("node", ["clu.js", "new", "app-view"])
+        fs.mkdirSync("./views");
+        cp.spawn("node", ["clu.js", "new", "app-view"]);
     }
 
 } else if (args[0] == "new" && args[1]) {
 
-    var viewName = args[1]
-    var viewClass = ""
+    var viewName = args[1];
+    var viewClass = "";
 
     for (var token of viewName.split("-")) {
-        viewClass += token.charAt(0).toUpperCase() + token.slice(1)
+        viewClass += token.charAt(0).toUpperCase() + token.slice(1);
     }
     
     var viewText = 
@@ -81,16 +81,16 @@ document.body.prepend(new AppView());`
 \`\`;
     }
     _setHandlers() {}
-}`
+}`;
 
-    fs.writeFileSync(`./views/${viewName}.js`, viewText)
+    fs.writeFileSync(`./views/${viewName}.js`, viewText);
     
     var importDefineText = 
-`import ${viewClass} from "./views/${viewName}.js"
+`import ${viewClass} from "./views/${viewName}.js";
 window.customElements.define("${viewName}", ${viewClass});
 
-`
+`;
 
-    var appJsText = fs.readFileSync("./app.js", "utf-8")
-    fs.writeFileSync("./app.js", importDefineText + appJsText)
+    var appJsText = fs.readFileSync("./app.js", "utf-8");
+    fs.writeFileSync("./app.js", importDefineText + appJsText);
 }
