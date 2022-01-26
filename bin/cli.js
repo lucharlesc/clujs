@@ -3,17 +3,15 @@
 const fs = require("fs");
 const cp = require("child_process");
 
-console.log(process.argv);
-
 var args = process.argv.slice(2);
 
 if (args[0] == "init") {
 
-    fs.mkdirSync("app");
-    fs.mkdirSync("app/images");
-    fs.mkdirSync("app/views");
-    fs.mkdirSync("server");
-    fs.mkdirSync("server/routes");
+    fs.mkdirSync("./app");
+    fs.mkdirSync("./app/images");
+    fs.mkdirSync("./app/views");
+    fs.mkdirSync("./server");
+    fs.mkdirSync("./server/routes");
 
     var appHtmlText = 
 `<!DOCTYPE html>
@@ -24,7 +22,7 @@ if (args[0] == "init") {
         <script type="module" src="app.js"></script>
     </body>
 </html>`;
-    fs.writeFileSync("app/app.html", appHtmlText);
+    fs.writeFileSync("./app/app.html", appHtmlText);
 
     var appJsText = 
 `var style = document.createElement("style");
@@ -33,7 +31,7 @@ style.innerHTML =
 document.head.append(style);
 
 document.body.prepend(new AppView());`;
-    fs.writeFileSync("app/app.js", appJsText);
+    fs.writeFileSync("./app/app.js", appJsText);
 
     cp.spawn("clu", ["nv", "app-view"]);
 
@@ -78,14 +76,14 @@ document.body.prepend(new AppView());`;
     setHandlers() {}
 }`;
 
-    fs.writeFileSync(`app/views/${viewName}.js`, viewText);
+    fs.writeFileSync(`./app/views/${viewName}.js`, viewText);
     
     var importDefineText = 
-`import ${viewClass} from "views/${viewName}.js";
+`import ${viewClass} from "./views/${viewName}.js";
 window.customElements.define("${viewName}", ${viewClass});
 
 `;
 
-    var appJsText = fs.readFileSync("app/app.js", "utf-8");
-    fs.writeFileSync("app/app.js", importDefineText + appJsText);
+    var appJsText = fs.readFileSync("./app/app.js", "utf-8");
+    fs.writeFileSync("./app/app.js", importDefineText + appJsText);
 }
