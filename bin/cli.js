@@ -130,10 +130,9 @@ window.customElements.define("${viewName}", ${viewClass});`;
     appJsText = appJsText.slice(0, beginViewDefinesIndex + 20) + viewDefineText + appJsText.slice(beginViewDefinesIndex + 20);
     fs.writeFileSync("./app/app.js", appJsText);
 
-} else if (args[0] == "nr" && args[1] && args[2]) {
+} else if (args[0] == "nr" && args[1]) {
 
-    var routePath = args[1]
-    var routeName = args[2];
+    var routeName = args[1];
     var routeFunc = "";
 
     var tokenIndex = 0;
@@ -154,7 +153,7 @@ module.exports = ${routeFunc}`;
     var endRouteRequiresIndex = serverJsText.indexOf("// @endRouteRequires");
     serverJsText = serverJsText.slice(0, endRouteRequiresIndex) + routeRequireText + serverJsText.slice(endRouteRequiresIndex);
     var routeDeclarationText = 
-`clu.route("${routePath}", ${routeFunc});
+`clu.route("/${routeName}", ${routeFunc});
 `;
     var endRouteDeclarationsIndex = serverJsText.indexOf("// @endRouteDeclarations");
     serverJsText = serverJsText.slice(0, endRouteDeclarationsIndex) + routeDeclarationText + serverJsText.slice(endRouteDeclarationsIndex);
