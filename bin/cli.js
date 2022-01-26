@@ -65,7 +65,7 @@ document.body.prepend(new AppView());`;
 clu.serve(3000);`;
     fs.writeFileSync("./server/server.js", serverJsText);
 
-    var child = cp.spawn("clu", ["nr", "/", "root"]);
+    var child = cp.spawn("clu", ["nr", "root", "/"]);
     child.on("exit", (code) => {
         var rootRouteText = 
 `async function root(req, res) {
@@ -133,6 +133,7 @@ window.customElements.define("${viewName}", ${viewClass});`;
 } else if (args[0] == "nr" && args[1]) {
 
     var routeName = args[1];
+    var routePath = args[2];
     var routeFunc = "";
 
     var tokenIndex = 0;
@@ -153,7 +154,7 @@ module.exports = ${routeFunc}`;
     var endRouteRequiresIndex = serverJsText.indexOf("// @endRouteRequires");
     serverJsText = serverJsText.slice(0, endRouteRequiresIndex) + routeRequireText + serverJsText.slice(endRouteRequiresIndex);
     var routeDeclarationText = 
-`clu.route("/${routeName}", ${routeFunc});
+`clu.route("${routePath ? routePath : "/" + routeName}", ${routeFunc});
 `;
     var endRouteDeclarationsIndex = serverJsText.indexOf("// @endRouteDeclarations");
     serverJsText = serverJsText.slice(0, endRouteDeclarationsIndex) + routeDeclarationText + serverJsText.slice(endRouteDeclarationsIndex);
