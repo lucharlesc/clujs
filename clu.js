@@ -29,7 +29,7 @@ class Clu {
         var server = http.createServer(async (req, res) => {
             try {
                 if (req.url in this.routes) {
-                    await this.routes[req.url](req, res, this);
+                    await this.routes[req.url](req, res);
                 } else {
                     await this.serveFile(req.url, res);
                 }
@@ -46,4 +46,4 @@ class Clu {
         });
     }
 }
-module.exports = Clu;
+global.clu = new Clu();

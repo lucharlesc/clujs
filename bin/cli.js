@@ -13,6 +13,13 @@ if (args[0] == "init") {
     fs.mkdirSync("./server");
     fs.mkdirSync("./server/routes");
 
+    var cluJsText = 
+`class Clu {
+
+}
+window.clu = new Clu();`;
+    fs.writeFileSync("./app/clu.js", cluJsText);
+
     var appHtmlText = 
 `<!DOCTYPE html>
 <html>
@@ -25,7 +32,9 @@ if (args[0] == "init") {
     fs.writeFileSync("./app/app.html", appHtmlText);
 
     var appJsText = 
-`// @beginViewImports
+`import "./clu.js";
+
+// @beginViewImports
 // @endViewImports
 
 // @beginViewDefines
@@ -45,12 +54,10 @@ document.body.prepend(new AppView());`;
     fs.appendFileSync("./app/app.js", prependAppViewText);
 
     var serverJsText = 
-`const Clu = require("clujs");
+`require("clujs");
 
 // @beginRouteRequires
 // @endRouteRequires
-
-var clu = new Clu();
 
 // @beginRouteDeclarations
 // @endRouteDeclarations
@@ -61,7 +68,7 @@ clu.serve(3000);`;
     var child = cp.spawn("clu", ["nr", "/", "root"]);
     child.on("exit", (code) => {
         var rootRouteText = 
-`async function root(req, res, clu) {
+`async function root(req, res) {
     clu.serveFile("/app.html", res);
 }
 module.exports = root;`;
@@ -136,7 +143,7 @@ window.customElements.define("${viewName}", ${viewClass});`;
     }
 
     var routeText = 
-`async function ${routeFunc}(req, res, clu) {}
+`async function ${routeFunc}(req, res) {}
 module.exports = ${routeFunc}`;
     fs.writeFileSync(`./server/routes/${routeName}.js`, routeText);
 
