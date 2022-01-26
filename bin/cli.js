@@ -25,7 +25,13 @@ if (args[0] == "init") {
     fs.writeFileSync("./app/app.html", appHtmlText);
 
     var appJsText = 
-`var style = document.createElement("style");
+`// @beginViewImports
+// @endViewImports
+
+// @beginViewDefines
+// @endViewDefines
+
+var style = document.createElement("style");
 style.innerHTML = 
 \`\`;
 document.head.append(style);`;
@@ -34,14 +40,33 @@ document.head.append(style);`;
     cp.spawn("clu", ["nv", "app-view"]);
     var prependAppViewText = 
 `
+
 document.body.prepend(new AppView());`;
     fs.appendFileSync("./app/app.js", prependAppViewText);
 
     var serverJsText = 
 `const Clu = require("clujs");
 
-var clu = new Clu();`;
+// @beginRouteRequires
+// @endRouteRequires
+
+var clu = new Clu();
+
+// @beginRouteDeclarations
+// @endRouteDeclarations
+
+clu.serve(3000);`;
     fs.writeFileSync("./server/server.js", serverJsText);
+
+    var child = cp.spawn("clu", ["nr", "/", "root"]);
+    child.on("exit", (code) => {
+        var rootRouteText = 
+`async function root(req, res, clu) {
+    clu.serveFile("/app.html", res);
+}
+module.exports = root;`;
+        fs.writeFileSync("./server/routes/root.js", rootRouteText);
+    });
 
 } else if (args[0] == "nv" && args[1]) {
 
@@ -85,13 +110,18 @@ var clu = new Clu();`;
 }`;
     fs.writeFileSync(`./app/views/${viewName}.js`, viewText);
 
-    var importDefineText = 
+    var viewImportText = 
 `import ${viewClass} from "./views/${viewName}.js";
-window.customElements.define("${viewName}", ${viewClass});
-
 `;
     var appJsText = fs.readFileSync("./app/app.js", "utf-8");
-    fs.writeFileSync("./app/app.js", importDefineText + appJsText);
+    var endViewImportsIndex = appJsText.indexOf("// @endViewImports");
+    appJsText = appJsText.slice(0, endViewImportsIndex) + viewImportText + appJsText.slice(endViewImportsIndex);
+    var viewDefineText = 
+`
+window.customElements.define("${viewName}", ${viewClass});`;
+    var beginViewDefinesIndex = appJsText.indexOf("// @beginViewDefines");
+    appJsText = appJsText.slice(0, beginViewDefinesIndex + 20) + viewDefineText + appJsText.slice(beginViewDefinesIndex + 20);
+    fs.writeFileSync("./app/app.js", appJsText);
 
 } else if (args[0] == "nr" && args[1] && args[2]) {
 
@@ -106,18 +136,20 @@ window.customElements.define("${viewName}", ${viewClass});
     }
 
     var routeText = 
-`async function ${routeFunc}(req, res) {}
+`async function ${routeFunc}(req, res, clu) {}
 module.exports = ${routeFunc}`;
     fs.writeFileSync(`./server/routes/${routeName}.js`, routeText);
 
-    var requireText = 
+    var routeRequireText = 
 `const ${routeFunc} = require("./routes/${routeName}.js");
 `;
     var serverJsText = fs.readFileSync("./server/server.js", "utf-8");
-    fs.writeFileSync("./server/server.js", requireText + serverJsText);
-
-    var setRouteText = 
-`
-clu.route("${routePath}", ${routeFunc});`;
-    fs.appendFileSync("./server/server.js", setRouteText);
+    var endRouteRequiresIndex = serverJsText.indexOf("// @endRouteRequires");
+    serverJsText = serverJsText.slice(0, endRouteRequiresIndex) + routeRequireText + serverJsText.slice(endRouteRequiresIndex);
+    var routeDeclarationText = 
+`clu.route("${routePath}", ${routeFunc});
+`;
+    var endRouteDeclarationsIndex = serverJsText.indexOf("// @endRouteDeclarations");
+    serverJsText = serverJsText.slice(0, endRouteDeclarationsIndex) + routeDeclarationText + serverJsText.slice(endRouteDeclarationsIndex);
+    fs.writeFileSync("./server/server.js", serverJsText);
 }

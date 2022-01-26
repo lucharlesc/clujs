@@ -6,17 +6,17 @@ class Clu {
     route(route, handler) {
         this.routes[route] = handler;
     }
-    async serveFile(req, res) {
+    async serveFile(url, res) {
         res.statusCode = 200;
         var re = /(?:\.([^.]+))?$/;
-        var fileExt = re.exec(req.url)[1];
+        var fileExt = re.exec(url)[1];
         var fileExtToType = {
             "html": "html",
             "js": "javascript"
         };
         if (fileExt) {
             res.setHeader("Content-Type", "text/" + fileExtToType[fileExt]);
-            var fileText = fs.readFileSync("./app" + req.url, "utf-8");
+            var fileText = fs.readFileSync("./app" + url, "utf-8");
             res.end(fileText);
         }
     }
@@ -25,13 +25,13 @@ class Clu {
         res.setHeader("Content-Type", "text/html");
         res.end("404");
     }
-    start(port) {
+    serve(port) {
         var server = http.createServer(async (req, res) => {
             try {
                 if (req.url in this.routes) {
-                    await this.routes[req.url](req, res);
+                    await this.routes[req.url](req, res, this);
                 } else {
-                    await this.serveFile(req, res);
+                    await this.serveFile(req.url, res);
                 }
             } catch (err) {
                 console.error(err);
