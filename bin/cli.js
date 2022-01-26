@@ -28,12 +28,20 @@ if (args[0] == "init") {
 `var style = document.createElement("style");
 style.innerHTML = 
 \`\`;
-document.head.append(style);
-
-document.body.prepend(new AppView());`;
+document.head.append(style);`;
     fs.writeFileSync("./app/app.js", appJsText);
 
     cp.spawn("clu", ["nv", "app-view"]);
+    var prependAppViewText = 
+`
+document.body.prepend(new AppView());`;
+    fs.appendFileSync("./app/app.js", prependAppViewText);
+
+    var serverJsText = 
+`const Clu = require("clujs");
+
+var clu = new Clu();`;
+    fs.writeFileSync("./server/server.js", serverJsText);
 
 } else if (args[0] == "nv" && args[1]) {
 
@@ -43,7 +51,7 @@ document.body.prepend(new AppView());`;
     for (var token of viewName.split("-")) {
         viewClass += token.charAt(0).toUpperCase() + token.slice(1);
     }
-    
+
     var viewText = 
 `export default class ${viewClass} extends HTMLElement {
     state = {};
@@ -75,15 +83,41 @@ document.body.prepend(new AppView());`;
     }
     setHandlers() {}
 }`;
-
     fs.writeFileSync(`./app/views/${viewName}.js`, viewText);
-    
+
     var importDefineText = 
 `import ${viewClass} from "./views/${viewName}.js";
 window.customElements.define("${viewName}", ${viewClass});
 
 `;
-
     var appJsText = fs.readFileSync("./app/app.js", "utf-8");
     fs.writeFileSync("./app/app.js", importDefineText + appJsText);
+
+} else if (args[0] == "nr" && args[1] && args[2]) {
+
+    var routePath = args[1]
+    var routeName = args[2];
+    var routeFunc = "";
+
+    var tokenIndex = 0;
+    for (var token of routeName.split("-")) {
+        routeFunc += (tokenIndex == 0 ? token : token.charAt(0).toUpperCase() + token.slice(1));
+        tokenIndex++;
+    }
+
+    var routeText = 
+`async function ${routeFunc}(req, res) {}
+module.exports = ${routeFunc}`;
+    fs.writeFileSync(`./server/routes/${routeName}.js`, routeText);
+
+    var requireText = 
+`const ${routeFunc} = require("./routes/${routeName}.js");
+`;
+    var serverJsText = fs.readFileSync("./server/server.js", "utf-8");
+    fs.writeFileSync("./server/server.js", requireText + serverJsText);
+
+    var setRouteText = 
+`
+clu.route("${routePath}", ${routeFunc});`;
+    fs.appendFileSync("./server/server.js", setRouteText);
 }
