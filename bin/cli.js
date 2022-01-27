@@ -79,7 +79,7 @@ window.clu = new Clu();`;
     fs.writeFileSync("./app/app.css", appCssText);
 
     var appJsText = 
-`import "../clu.js";
+`import "./clu.js";
 
 // @beginViewImports
 // @endViewImports`;
