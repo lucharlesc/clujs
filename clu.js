@@ -12,6 +12,7 @@ class Clu {
         var fileExt = re.exec(url)[1];
         var fileExtToType = {
             "html": "html",
+            "css": "css",
             "js": "javascript"
         };
         if (fileExt) {
