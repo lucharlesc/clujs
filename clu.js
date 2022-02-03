@@ -1,11 +1,35 @@
 const http = require("http");
-const fs = require("fs");
+const fs = require("fs/promises");
 
-class Clu {
-    routes = {};
-    route(route, handler) {
-        this.routes[route] = handler;
+class Server {
+    routes = {
+        base: new Route
+    };
+    route(routePath, routeClass) {
+        this.routes[routePath] = new routeClass;
     }
+    serve(port) {
+        var server = http.createServer(async (req, res) => {
+            try {
+                if (req.url in this.routes) {
+                    await this.routes[req.url].connectedCallback(req, res);
+                } else {
+                    await this.routes.base.serveFile(req.url, res);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                if (!res.writableEnded) {
+                    this.routes.base.notFound(res);
+                }
+            }
+        });
+        server.listen(port, () => {
+            console.log("server running");
+        });
+    }
+}
+class Route {
     async serveFile(url, res) {
         res.statusCode = 200;
         var re = /(?:\.([^.]+))?$/;
@@ -17,34 +41,28 @@ class Clu {
         };
         if (fileExt) {
             res.setHeader("Content-Type", "text/" + fileExtToType[fileExt]);
-            var fileText = fs.readFileSync("./app" + url, "utf-8");
+            var fileText = await fs.readFile("./app" + url, "utf-8");
             res.end(fileText);
         }
     }
-    async notFound(req, res) {
+    async receiveData(req) {
+        var buffers = [];
+        for await (var chunk of req) {
+            buffers.push(chunk);
+        }
+        return JSON.parse(Buffer.concat(buffers).toString());
+    }
+    sendData(res, data) {
+        res.end(JSON.stringify(data));
+    }
+    notFound(res) {
         res.statusCode = 404;
         res.setHeader("Content-Type", "text/html");
         res.end("404");
     }
-    serve(port) {
-        var server = http.createServer(async (req, res) => {
-            try {
-                if (req.url in this.routes) {
-                    await this.routes[req.url](req, res);
-                } else {
-                    await this.serveFile(req.url, res);
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                if (!res.writableEnded) {
-                    this.notFound(req, res);
-                }
-            }
-        });
-        server.listen(port, () => {
-            console.log("server running");
-        });
+    async connectedCallback(req, res) {
+        await this.respond(req, res);
     }
 }
-global.clu = new Clu();
+exports.Server = Server;
+exports.Route = Route;
