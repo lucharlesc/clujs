@@ -149,7 +149,7 @@ app.start("app-view");`;
         app-view a:hover {
             color: #000000;
         }`, `
-        titleColor: "0066FF"
+        titleColor: "#0066FF"
     `, `
         click: () => {
             var randColor = "#" + Math.floor(16777215 * Math.random()).toString(16);
