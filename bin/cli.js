@@ -239,7 +239,7 @@ export default class ${viewClass} extends clu.View {
 class ${routeClass} extends clu.Route {
     async respond(req, res) {${routeResponse ? routeResponse : ""}}
 }
-module.exports = ${routeClass}`;
+module.exports = ${routeClass};`;
     fs.writeFileSync(`./server/routes/${routeName}.js`, routeText);
 
     var routeRequireText = 
