@@ -13,8 +13,10 @@ class Server {
             try {
                 if (req.url in this.routes) {
                     await this.routes[req.url].connectedCallback(req, res);
-                } else {
+                } else if (req.url.includes(".")) {
                     await this.routes.base.serveFile(req.url, res);
+                } else {
+                    await this.routes["/*"].connectedCallback(req, res);
                 }
             } catch (err) {
                 console.error(err);

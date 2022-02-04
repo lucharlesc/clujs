@@ -17,13 +17,19 @@ if (args[0] == "init") {
 `class App {
     nextPropsId = 0;
     props = {};
-    constructor() {
-        window.cluApp = this;
-    }
     view(viewName, viewClass) {
         window.customElements.define(viewName, viewClass);
     }
     start(rootName, id) {
+        window.cluApp = this;
+        window.addEventListener("popstate", (event) => {
+            var cluRoutes = document.getElementsByTagName("clu-route");
+            for (var cluRoute of cluRoutes) {
+                cluRoute.reRender();
+            }
+        });
+        this.view("clu-route", CluRoute);
+        this.view("clu-link", CluLink);
         var rootElement = document.createElement(rootName);
         if (id) {
             rootElement.id = id;
@@ -36,7 +42,7 @@ class View extends HTMLElement {
         for (var key in state) {
             this.state[key] = state[key];
         }
-        this.innerHTML = this.render();
+        this.reRender();
     }
     setProps(props) {
         var propsId = window.cluApp.nextPropsId++;
@@ -47,6 +53,9 @@ class View extends HTMLElement {
         }
         window.cluApp.props[propsId] = props;
         return propsId;
+    }
+    reRender() {
+        this.innerHTML = this.render();
     }
     connectedCallback() {
         if (!Object.getPrototypeOf(this).isStyled) {
@@ -60,12 +69,14 @@ class View extends HTMLElement {
         for (var prop in props) {
             this.state[prop] = props[prop];
         }
+        delete window.cluApp.props[propsId];
+        this.removeAttribute("data-props");
         for (var event in this.events) {
             this.addEventListener(event, (e) => {
                 this.events[event](e);
             });
         }
-        this.innerHTML = this.render();
+        this.reRender();
     }
     async fetchData(url, data) {
         try {
@@ -82,6 +93,39 @@ class View extends HTMLElement {
         }
     }
 }
+class CluRoute extends View {
+    styles = \`\`;
+    state = {
+        html: this.innerHTML
+    };
+    events = {};
+    render() {
+        if (this.dataset.path == window.location.pathname.slice(0, this.dataset.path.length)) {
+            this.removeAttribute("hidden");
+            return \`\${this.state.html}\`;
+        } else {
+            this.setAttribute("hidden", "");
+            return \`\`;
+        }
+    }
+}
+class CluLink extends View {
+    styles = \`\`;
+    state = {};
+    events = {
+        click: (event) => {
+            event.preventDefault();
+            window.history.pushState({}, "", this.dataset.path);
+            var cluRoutes = document.getElementsByTagName("clu-route");
+            for (var cluRoute of cluRoutes) {
+                cluRoute.reRender();
+            }
+        }
+    };
+    render() {
+        return \`\${this.innerHTML}\`;
+    }
+}
 export { App, View };`;
     fs.writeFileSync("./app/clu.js", cluJsText);
 
@@ -91,10 +135,10 @@ export { App, View };`;
     <head>
         <title>Clu App</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="app.css">
+        <link rel="stylesheet" href="/app.css">
     </head>
     <body>
-        <script type="module" src="app.js"></script>
+        <script type="module" src="/app.js"></script>
     </body>
 </html>`;
     fs.writeFileSync("./app/app.html", appHtmlText);
@@ -179,7 +223,7 @@ var server = new clu.Server;
 server.serve(3000);`;
     fs.writeFileSync("./server/server.js", serverJsText);
 
-    cp.spawn("clu", ["nr", "root", "/", `
+    cp.spawn("clu", ["nr", "default-route", "/*", `
         await this.serveFile("/app.html", res);
     `]);
 
