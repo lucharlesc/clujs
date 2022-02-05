@@ -37,14 +37,21 @@ class Route {
         var re = /(?:\.([^.]+))?$/;
         var fileExt = re.exec(url)[1];
         var fileExtToType = {
-            "html": "html",
-            "css": "css",
-            "js": "javascript"
+            html: "text/html",
+            css: "text/css",
+            js: "application/javascript",
+            png: "image/png"
         };
+        var fileExtToEncoding = {
+            html: "utf-8",
+            css: "utf-8",
+            js: "utf-8",
+            png: "base64"
+        }
         if (fileExt) {
-            res.setHeader("Content-Type", "text/" + fileExtToType[fileExt]);
-            var fileText = await fs.readFile("./app" + url, "utf-8");
-            res.end(fileText);
+            res.setHeader("Content-Type", fileExtToType[fileExt]);
+            var fileText = await fs.readFile("./app" + url, fileExtToEncoding[fileExt]);
+            res.end(fileText, fileExtToEncoding[fileExt]);
         }
     }
     async receiveData(req) {
