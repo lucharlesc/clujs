@@ -56,6 +56,18 @@ class View extends HTMLElement {
     }
     reRender() {
         this.innerHTML = this.render();
+        var elements = this.getElementsByTagName("*");
+        for (var element of elements) {
+            for (var i = 0; i < element.attributes.length; i++) {
+                var attribute = element.attributes[i];
+                if (attribute.name.slice(0, 6) == "event-") {
+                    let eventHandler = attribute.value;
+                    element.addEventListener(attribute.name.slice(6), (event) => {
+                        this[eventHandler](event);
+                    });
+                }
+            }
+        }
     }
     connectedCallback() {
         if (!Object.getPrototypeOf(this).isStyled) {
