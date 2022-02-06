@@ -22,7 +22,7 @@ if (args[0] == "init") {
     }
     start(rootName, id) {
         window.cluApp = this;
-        window.addEventListener("popstate", (event) => {
+        window.addEventListener("popstate", function (event) {
             var cluRoutes = document.getElementsByTagName("clu-route");
             for (var cluRoute of cluRoutes) {
                 cluRoute.reRender();
@@ -56,18 +56,26 @@ class View extends HTMLElement {
     }
     reRender() {
         this.innerHTML = this.render();
-        var elements = this.getElementsByTagName("*");
-        for (var element of elements) {
-            for (var i = 0; i < element.attributes.length; i++) {
-                var attribute = element.attributes[i];
-                if (attribute.name.slice(0, 6) == "event-") {
-                    let eventHandler = attribute.value;
-                    element.addEventListener(attribute.name.slice(6), (event) => {
-                        this[eventHandler](event);
-                    });
+        function loopThruNonCluViewChildren(element, func) {
+            for (var child of element.children) {
+                if (!(Object.getPrototypeOf(child) instanceof View)) {
+                    func(child);
+                    loopThruNonCluViewChildren(child, func);
                 }
             }
         }
+        function setDeclarativeEvents(element) {
+            for (var attr of element.attributes) {
+                if (attr.name.slice(0, 6) == "event-") {
+                    let eventHandler = attr.value;
+                    element.addEventListener(attr.name.slice(6), function (event) {
+                        this[eventHandler](event);
+                    }.bind(this));
+                }
+            }
+        }
+        setDeclarativeEvents = setDeclarativeEvents.bind(this);
+        loopThruNonCluViewChildren(this, setDeclarativeEvents);
     }
     connectedCallback() {
         if (!Object.getPrototypeOf(this).isStyled) {
@@ -84,8 +92,8 @@ class View extends HTMLElement {
         delete window.cluApp.props[propsId];
         this.removeAttribute("data-props");
         for (var event in this.events) {
-            this.addEventListener(event, (e) => {
-                this.events[event](e);
+            this.addEventListener(event, function (e) {
+                this.events[event].bind(this)(e);
             });
         }
         this.reRender();
@@ -125,7 +133,7 @@ class CluLink extends View {
     styles = \`\`;
     state = {};
     events = {
-        click: (event) => {
+        click: function (event) {
             event.preventDefault();
             window.history.pushState({}, "", this.dataset.path);
             var cluRoutes = document.getElementsByTagName("clu-route");
@@ -207,7 +215,7 @@ app.start("app-view");`;
         }`, `
         titleColor: "#0066FF"
     `, `
-        click: () => {
+        click: function () {
             var randColor = "#" + Math.floor(16777215 * Math.random()).toString(16);
             this.setState({
                 titleColor: randColor
