@@ -71,6 +71,7 @@ class View extends HTMLElement {
                     element.addEventListener(attr.name.slice(6), function (event) {
                         this[eventHandler](event);
                     }.bind(this));
+                    element.removeAttribute(attr.name);
                 }
             }
         }
