@@ -66,9 +66,9 @@ class View extends HTMLElement {
         }
         function setDeclarativeEvents(element) {
             for (var attr of element.attributes) {
-                if (attr.name.slice(0, 6) == "event-") {
+                if (attr.name.slice(0, 3) == "on-") {
                     let eventHandler = attr.value;
-                    element.addEventListener(attr.name.slice(6), function (event) {
+                    element.addEventListener(attr.name.slice(3), function (event) {
                         this[eventHandler](event);
                     }.bind(this));
                     element.removeAttribute(attr.name);
