@@ -15,8 +15,8 @@ if (args[0] == "init") {
 
     var cluJsText = 
 `class App {
-    nextPropsId = 0;
-    props = {};
+    nextInitStateId = 0;
+    initStates = {};
     component(componentName, componentClass) {
         window.customElements.define(componentName, componentClass);
     }
@@ -38,21 +38,21 @@ if (args[0] == "init") {
     }
 }
 class Component extends HTMLElement {
-    setState(state) {
+    updateState(state) {
         for (var key in state) {
             this.state[key] = state[key];
         }
         this.reRender();
     }
-    setProps(props) {
-        var propsId = window.cluApp.nextPropsId++;
-        for (var prop in props) {
-            if (typeof props[prop] == "function") {
-                props[prop] = props[prop].bind(this);
+    initState(initState) {
+        var initStateId = window.cluApp.nextInitStateId++;
+        for (var key in initState) {
+            if (typeof initState[key] == "function") {
+                initState[key] = initState[key].bind(this);
             }
         }
-        window.cluApp.props[propsId] = props;
-        return propsId;
+        window.cluApp.initStates[initStateId] = initState;
+        return initStateId;
     }
     reRender() {
         this.innerHTML = this.render();
@@ -85,13 +85,13 @@ class Component extends HTMLElement {
             document.head.append(styleElement);
             Object.getPrototypeOf(this).isStyled = true;
         }
-        var propsId = this.dataset.props;
-        var props = window.cluApp.props[propsId];
-        for (var prop in props) {
-            this.state[prop] = props[prop];
+        var initStateId = this.getAttribute("state");
+        var initState = window.cluApp.initStates[initStateId];
+        for (var key in initState) {
+            this.state[key] = initState[key];
         }
-        delete window.cluApp.props[propsId];
-        this.removeAttribute("data-props");
+        delete window.cluApp.initStates[initStateId];
+        this.removeAttribute("state");
         for (var event in this.events) {
             this.addEventListener(event, function (e) {
                 this.events[event].bind(this)(e);
@@ -121,7 +121,7 @@ class CluRoute extends Component {
     };
     events = {};
     render() {
-        if (this.dataset.path == window.location.pathname.slice(0, this.dataset.path.length)) {
+        if (this.getAttribute("path") == window.location.pathname.slice(0, this.getAttribute("path").length)) {
             this.removeAttribute("hidden");
             return \`\${this.state.html}\`;
         } else {
@@ -136,7 +136,7 @@ class CluLink extends Component {
     events = {
         click: function (event) {
             event.preventDefault();
-            window.history.pushState({}, "", this.dataset.path);
+            window.history.pushState({}, "", this.getAttribute("path"));
             var cluRoutes = document.getElementsByTagName("clu-route");
             for (var cluRoute of cluRoutes) {
                 cluRoute.reRender();
@@ -218,7 +218,7 @@ app.start("app-component");`;
     `, `
         click: function () {
             var randColor = "#" + Math.floor(16777215 * Math.random()).toString(16);
-            this.setState({
+            this.updateState({
                 titleColor: randColor
             });
         }
