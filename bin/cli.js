@@ -184,7 +184,7 @@ var app = new clu.App;
 app.start("app-component");`;
     fs.writeFileSync("./app/app.js", appJsText);
 
-    cp.spawn("clu", ["nv", "app-component", `
+    cp.spawn("clu", ["nc", "app-component", `
         app-component {
             display: flex;
             flex-direction: column;
