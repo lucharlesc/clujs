@@ -9,7 +9,7 @@ if (args[0] == "init") {
 
     fs.mkdirSync("./app");
     fs.mkdirSync("./app/images");
-    fs.mkdirSync("./app/views");
+    fs.mkdirSync("./app/components");
     fs.mkdirSync("./server");
     fs.mkdirSync("./server/routes");
 
@@ -17,8 +17,8 @@ if (args[0] == "init") {
 `class App {
     nextPropsId = 0;
     props = {};
-    view(viewName, viewClass) {
-        window.customElements.define(viewName, viewClass);
+    component(componentName, componentClass) {
+        window.customElements.define(componentName, componentClass);
     }
     start(rootName, id) {
         window.cluApp = this;
@@ -28,8 +28,8 @@ if (args[0] == "init") {
                 cluRoute.reRender();
             }
         });
-        this.view("clu-route", CluRoute);
-        this.view("clu-link", CluLink);
+        this.component("clu-route", CluRoute);
+        this.component("clu-link", CluLink);
         var rootElement = document.createElement(rootName);
         if (id) {
             rootElement.id = id;
@@ -37,7 +37,7 @@ if (args[0] == "init") {
         document.body.prepend(rootElement);
     }
 }
-class View extends HTMLElement {
+class Component extends HTMLElement {
     setState(state) {
         for (var key in state) {
             this.state[key] = state[key];
@@ -56,11 +56,11 @@ class View extends HTMLElement {
     }
     reRender() {
         this.innerHTML = this.render();
-        function loopThruNonCluViewChildren(element, func) {
+        function loopThruNonComponentChildren(element, func) {
             for (var child of element.children) {
-                if (!(Object.getPrototypeOf(child) instanceof View)) {
+                if (!(Object.getPrototypeOf(child) instanceof Component)) {
                     func(child);
-                    loopThruNonCluViewChildren(child, func);
+                    loopThruNonComponentChildren(child, func);
                 }
             }
         }
@@ -76,7 +76,7 @@ class View extends HTMLElement {
             }
         }
         setDeclarativeEvents = setDeclarativeEvents.bind(this);
-        loopThruNonCluViewChildren(this, setDeclarativeEvents);
+        loopThruNonComponentChildren(this, setDeclarativeEvents);
     }
     connectedCallback() {
         if (!Object.getPrototypeOf(this).isStyled) {
@@ -114,7 +114,7 @@ class View extends HTMLElement {
         }
     }
 }
-class CluRoute extends View {
+class CluRoute extends Component {
     styles = \`\`;
     state = {
         html: this.innerHTML
@@ -130,7 +130,7 @@ class CluRoute extends View {
         }
     }
 }
-class CluLink extends View {
+class CluLink extends Component {
     styles = \`\`;
     state = {};
     events = {
@@ -147,7 +147,7 @@ class CluLink extends View {
         return \`\${this.innerHTML}\`;
     }
 }
-export { App, View };`;
+export { App, Component };`;
     fs.writeFileSync("./app/clu.js", cluJsText);
 
     var appHtmlText = 
@@ -173,19 +173,19 @@ export { App, View };`;
     var appJsText = 
 `import * as clu from "./clu.js";
 
-// @beginViewImports
-// @endViewImports
+// @beginComponentImports
+// @endComponentImports
 
 var app = new clu.App;
 
-// @beginViewDeclares
-// @endViewDeclares
+// @beginComponentDeclares
+// @endComponentDeclares
 
-app.start("app-view");`;
+app.start("app-component");`;
     fs.writeFileSync("./app/app.js", appJsText);
 
-    cp.spawn("clu", ["nv", "app-view", `
-        app-view {
+    cp.spawn("clu", ["nv", "app-component", `
+        app-component {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -195,23 +195,23 @@ app.start("app-view");`;
             background-color: #F2F2F2;
             user-select: none;
         }
-        app-view p {
+        app-component p {
             margin: 0 0 16px 0;
             font-size: 32px;
             font-weight: bold;
         }
-        app-view div {
+        app-component div {
             display: flex;
             justify-content: space-between;
             width: 160px;
         }
-        app-view a {
+        app-component a {
             font-size: 16px;
             font-weight: normal;
             color: #808080;
             text-decoration: none;
         }
-        app-view a:hover {
+        app-component a:hover {
             color: #000000;
         }`, `
         titleColor: "#0066FF"
@@ -248,43 +248,43 @@ server.serve(3000);`;
         await this.serveFile("/app.html", res);
     `]);
 
-} else if (args[0] == "nv" && args[1]) {
+} else if (args[0] == "nc" && args[1]) {
 
-    var viewName = args[1];
-    var viewStyles = args[2];
-    var viewState = args[3];
-    var viewEvents = args[4];
-    var viewHtml = args[5];
-    var viewClass = "";
+    var componentName = args[1];
+    var componentStyles = args[2];
+    var componentState = args[3];
+    var componentEvents = args[4];
+    var componentHtml = args[5];
+    var componentClass = "";
 
-    for (var token of viewName.split("-")) {
-        viewClass += token.charAt(0).toUpperCase() + token.slice(1);
+    for (var token of componentName.split("-")) {
+        componentClass += token.charAt(0).toUpperCase() + token.slice(1);
     }
 
-    var viewText = 
+    var componentText = 
 `import * as clu from "../clu.js";
 
-export default class ${viewClass} extends clu.View {
-    styles = \`${viewStyles ? viewStyles : ""}\`;
-    state = {${viewState ? viewState : ""}};
-    events = {${viewEvents ? viewEvents : ""}};
+export default class ${componentClass} extends clu.Component {
+    styles = \`${componentStyles ? componentStyles : ""}\`;
+    state = {${componentState ? componentState : ""}};
+    events = {${componentEvents ? componentEvents : ""}};
     render() {
-        return \`${viewHtml ? viewHtml : ""}\`;
+        return \`${componentHtml ? componentHtml : ""}\`;
     }
 }`;
-    fs.writeFileSync(`./app/views/${viewName}.js`, viewText);
+    fs.writeFileSync(`./app/components/${componentName}.js`, componentText);
 
-    var viewImportText = 
-`import ${viewClass} from "./views/${viewName}.js";
+    var componentImportText = 
+`import ${componentClass} from "./components/${componentName}.js";
 `;
     var appJsText = fs.readFileSync("./app/app.js", "utf-8");
-    var endViewImportsIndex = appJsText.indexOf("// @endViewImports");
-    appJsText = appJsText.slice(0, endViewImportsIndex) + viewImportText + appJsText.slice(endViewImportsIndex);
-    var viewDeclareText = 
-`app.view("${viewName}", ${viewClass});
+    var endComponentImportsIndex = appJsText.indexOf("// @endComponentImports");
+    appJsText = appJsText.slice(0, endComponentImportsIndex) + componentImportText + appJsText.slice(endComponentImportsIndex);
+    var componentDeclareText = 
+`app.component("${componentName}", ${componentClass});
 `;
-    var endViewDeclaresIndex = appJsText.indexOf("// @endViewDeclares");
-    appJsText = appJsText.slice(0, endViewDeclaresIndex) + viewDeclareText + appJsText.slice(endViewDeclaresIndex);
+    var endComponentDeclaresIndex = appJsText.indexOf("// @endComponentDeclares");
+    appJsText = appJsText.slice(0, endComponentDeclaresIndex) + componentDeclareText + appJsText.slice(endComponentDeclaresIndex);
     fs.writeFileSync("./app/app.js", appJsText);
 
 } else if (args[0] == "nr" && args[1]) {
