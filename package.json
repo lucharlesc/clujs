@@ -1,6 +1,6 @@
 {
   "name": "clujs",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "A complete frontend and backend JavaScript web framework using Web Components and Node.js",
   "main": "clu.js",
   "bin": {

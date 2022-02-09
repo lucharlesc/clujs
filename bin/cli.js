@@ -23,13 +23,13 @@ if (args[0] == "init") {
     start(rootName, id) {
         window.cluApp = this;
         window.addEventListener("popstate", function (event) {
-            var cluRoutes = document.getElementsByTagName("clu-route");
-            for (var cluRoute of cluRoutes) {
-                cluRoute.reRender();
+            var routerRoutes = document.getElementsByTagName("router-route");
+            for (var routerRoute of routerRoutes) {
+                routerRoute.reRender();
             }
         });
-        this.component("clu-route", CluRoute);
-        this.component("clu-link", CluLink);
+        this.component("router-route", RouterRoute);
+        this.component("router-link", RouterLink);
         var rootElement = document.createElement(rootName);
         if (id) {
             rootElement.id = id;
@@ -114,7 +114,7 @@ class Component extends HTMLElement {
         }
     }
 }
-class CluRoute extends Component {
+class RouterRoute extends Component {
     styles = \`\`;
     state = {
         html: this.innerHTML
@@ -130,16 +130,16 @@ class CluRoute extends Component {
         }
     }
 }
-class CluLink extends Component {
+class RouterLink extends Component {
     styles = \`\`;
     state = {};
     events = {
         click: function (event) {
             event.preventDefault();
             window.history.pushState({}, "", this.getAttribute("path"));
-            var cluRoutes = document.getElementsByTagName("clu-route");
-            for (var cluRoute of cluRoutes) {
-                cluRoute.reRender();
+            var routerRoutes = document.getElementsByTagName("router-route");
+            for (var routerRoute of routerRoutes) {
+                routerRoute.reRender();
             }
         }
     };
