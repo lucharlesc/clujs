@@ -379,9 +379,7 @@ var server = new clu.Server;
 server.serve(3000);`;
     fs.writeFileSync("./server/server.js", serverJsText);
 
-    cp.spawn("clu", ["nr", "default-route", "/*", `
-        await this.serveFile("/app.html", res);
-    `], { shell: true });
+    cp.spawn("clu", ["nr", "default-route", "/*", 1], { shell: true });
 
 } else if (args[0] == "nc" && args[1]) {
 
@@ -416,22 +414,29 @@ export default class ${componentClass} extends clu.Component {
     appJsText = appJsText.slice(0, endComponentDeclaresIndex) + componentDeclareText + appJsText.slice(endComponentDeclaresIndex);
     fs.writeFileSync("./app/app.js", appJsText);
 
-} else if (args[0] == "nr" && args[1]) {
+} else if (args[0] == "nr" && args[1] && args[2]) {
 
     var routeName = args[1];
     var routePath = args[2];
-    var routeResponse = args[3];
+    var routeResponsePreset = args[3];
     var routeClass = "";
+    var routeResponse = "";
 
     for (var token of routeName.split("-")) {
         routeClass += token.charAt(0).toUpperCase() + token.slice(1);
+    }
+
+    if (routeResponsePreset == 1) {
+        routeResponse = `
+        await this.serveFile("/app.html", res);
+    `;
     }
 
     var routeText = 
 `const clu = require("clujs");
 
 class ${routeClass} extends clu.Route {
-    async respond(req, res) {${routeResponse ? routeResponse : ""}}
+    async respond(req, res) {${routeResponse}}
 }
 module.exports = ${routeClass};`;
     fs.writeFileSync(`./server/routes/${routeName}.js`, routeText);
