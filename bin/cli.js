@@ -363,7 +363,7 @@ var app = new clu.App;
 app.start("app-component");`;
     fs.writeFileSync("./app/app.js", appJsText);
 
-    cp.spawn("clu", ["nc", "app-component"]);
+    cp.spawn("clu", ["nc", "app-component"], { shell: true });
 
     var serverJsText = 
 `const clu = require("clujs");
@@ -381,7 +381,7 @@ server.serve(3000);`;
 
     cp.spawn("clu", ["nr", "default-route", "/*", `
         await this.serveFile("/app.html", res);
-    `]);
+    `], { shell: true });
 
 } else if (args[0] == "nc" && args[1]) {
 
